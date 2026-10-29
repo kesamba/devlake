@@ -31,7 +31,7 @@ FROM --platform=linux/arm64 debian:bookworm as debian-arm64
 RUN apt-get update
 RUN apt-get install -y libssh2-1-dev libssl-dev zlib1g-dev
 
-FROM --platform=$BUILDPLATFORM golang:1.26-bookworm as builder
+FROM --platform=$BUILDPLATFORM golang:1.27-bookworm as builder
 
 # docker build --build-arg GOPROXY=https://goproxy.io,direct -t mericodev/lake .
 ARG GOPROXY=
@@ -49,7 +49,7 @@ RUN if [ "$(arch)" != "x86_64" ] ; then \
         apt-get install -y gcc-x86-64-linux-gnu binutils-x86-64-linux-gnu ; \
     fi
 
-RUN go install github.com/vektra/mockery/v3@v3.7.4
+RUN go install github.com/vektra/mockery/v3@v3.8.1
 RUN go install github.com/swaggo/swag/cmd/swag@v1.16.6
 
 COPY --from=debian-amd64 /usr/include /rootfs-amd64/usr/include
@@ -118,7 +118,9 @@ RUN cd /usr/local/deps/target/lib && \
 
 FROM python:3.11-slim-bookworm as base
 
+# apt-get upgrade picks up Debian security fixes that the base tag does not contain yet
 RUN apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y python3-dev python3-pip tar pkg-config curl libssh2-1 zlib1g libffi-dev default-libmysqlclient-dev libpq-dev tini git openssh-client corkscrew && \
     apt-get clean && \
     rm -fr /usr/share/doc/* \
